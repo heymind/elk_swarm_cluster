@@ -1,0 +1,45 @@
+version: '3.2'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_TAG}
+    network:
+      - elk-cluster
+    ports:
+      - target: 9200
+        published: 9200
+        mode: ingress
+    environment:
+      ES_JAVA_OPTS: '-Xms256m -Xmx256m'
+      cluster.name: es-cluster
+      network.host: _eth0:ipv4_
+      network.bind_host: 0.0.0.0
+      discovery.zen.minimum_master_nodes: 2
+      discovery.zen.ping.unicast.host: elasticsearch
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+      xpack.ml.enabled: 'false'
+      http.cors.enabled: 'true'
+      http.cors.allow-origin: '*'
+      logger.level: debug
+    deploy:
+      replicas: ${ES_INSTANCES}
+      placement:
+#        constraints:
+#          - node.labels.elk.es
+        resources:
+          ulimits:
+            memlock:
+              soft: -1
+              hard: -1
+            nofile:
+              soft: 65536
+              hard: 65536
+            nproc:
+              soft: 65536
+              hard: 65536
+
+network:
+  elk-cluster:
+    driver: overlay
